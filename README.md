@@ -1,0 +1,1 @@
+This is a discord bot for automating the process of arranging rides.
