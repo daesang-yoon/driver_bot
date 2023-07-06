@@ -17,6 +17,65 @@ SPREADSHEET_ID = "18MYt45bq_UjoAKP-cQjg5nVeyAXaC7lpC_CsUIKXJns"
 def assign_rides_back():
     try:
         sheet = get_sheet()
+        areas = get_areas()
+
+        #assign people to cars
+        drivers = ['heidi', 'jessica', 'elliot', 'alex park', 'joel', 'erik', 'camryn']
+
+        #account for too many sign ups for # of drivers
+        if 4*len(drivers) < sum([len(v) for _, v in areas.items()]):
+            return 'not enough cars to take everyone'
+        
+        #for now, might change later to load from the google sheets or something
+        prio = dict()
+        prio['heidi'] = ['mesa', 'middle earth', 'plaza', 'vdc/vdcn', 'offcampus']
+        prio['jessica'] = ['plaza', 'vdc/vdcn', 'middle earth', 'mesa', 'offcampus']
+        prio['elliot'] = ['middle earth', 'plaza', 'vdc/vdcn', 'mesa', 'offcampus']
+        prio['alex park'] = ['offcampus', 'mesa', 'middle earth', 'plaza', 'vdc/vdcn']
+        prio['joel'] = ['offcampus', 'mesa', 'middle earth', 'plaza', 'vdc/vdcn']
+        prio['erik'] = ['offcampus', 'mesa', 'middle earth', 'plaza', 'vdc/vdcn']
+        prio['camryn'] = ['offcampus', 'mesa', 'middle earth', 'plaza', 'vdc/vdcn']
+        
+        #go from driver to driver, taking all people of their first prio
+        #repeat for second prio until cars are full
+
+        #^^ this thing does not work well lol
+        #maybe doing something like assigning a weight where prio is a sum (min desired) and # of different places 
+        #per car is a multiplier, and we're trying to minimize the total sum of all the cars
+
+        cars = defaultdict(list)
+        prio_index = 0
+        people_num = sum([len(v) for k, v in areas.items()])
+        while people_num > 0:
+            for d in drivers:
+                if len(cars[d]) < 4:
+                    while len(areas[prio[d][prio_index]])>0 and len(cars[d])<4:
+                        cars[d].append(areas[prio[d][prio_index]][0][0])
+                        areas[prio[d][prio_index]].pop(0)
+                        people_num -= 1
+
+            prio_index += 1
+
+        # for k, v in cars.items():
+        #     print(k)
+        #     print(v)
+        #     print()
+
+        #formatting for google sheets
+        output = [[]]
+
+        for d in drivers:
+            output[0].append(d)
+
+        return 'updated spreadsheet on the rides tab for RETURNING rides'
+    
+    except HttpError as err:
+        print(err)
+
+
+def get_areas():
+    try:
+        sheet = get_sheet()
         result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="Current!B2:H100").execute()
         values = result.get('values', [])
 
@@ -24,31 +83,81 @@ def assign_rides_back():
         early = []  #all areas just grouped in here
         areas = defaultdict(list)  #mesa, middle, plaza, vdc/vdcn, puerta, off campus
         for row in values:
+            person = None
+            if len(row[0])>5:
+                index = row[0].rfind(' ')
+                if index==-1:
+                    person = row[0]
+                else:
+                    person = row[0][:index]
+            else:
+                person = row[0]
             #divide into early and fellowship
             if row[5]=='NO':
-                early.append((row[0], row[4]))
+                early.append((person, row[4]))
             else:
                 #mesa
                 if 'mesa' in row[4].lower():
-                    areas['mesa'].append((row[0], row[4]))
+                    areas['mesa'].append((person, row[4]))
                 elif 'brandy' in row[4].lower() or 'middle' in row[4].lower():
-                    areas['middleearth'].append((row[0], row[4]))
+                    areas['middle earth'].append((person, row[4]))
                 elif 'plaza' in row[4].lower():
-                    areas['plaza'].append((row[0], row[4]))
+                    areas['plaza'].append((person, row[4]))
                 elif 'vdc' in row[4].lower():
-                    areas['vdcvdcn'].append((row[0], row[4]))
+                    areas['vdc/vdcn'].append((person, row[4]))
                 elif 'puerta' in row[4].lower():
-                    areas['vdcvdcn'].append((row[0], row[4]))
+                    areas['vdc/vdcn'].append((person, row[4]))
                 else:
-                    areas['offcampus'].append((row[0], row[4]))
+                    areas['offcampus'].append((person, row[4]))
 
-        for k, v in areas.items():
-            print(k, len(v))
-            print(v)
-            print()
+        # for k, v in areas.items():
+        #     print(k, len(v))
+        #     print(v)
+        #     print()
 
-        return areas    
+        # return 'omegalul'
 
+        #translate dict to list of lists for google sheets api
+        output = []
+        output.append([])
+        for k, v in sorted(areas.items(), key=lambda x:x[0]):
+            if k=='offcampus':
+                continue
+            output[0].append(f'{k}-({len(v)})')
+        output[0].append(f"offcampus-({len(areas['offcampus'])})")
+
+        index = 0
+        while True:
+            temp = []
+            empty = True
+            for k in output[0]:
+                if index>=len(areas[k.split('-')[0]]):
+                    temp.append('')
+                else:
+                    a = areas[k.split('-')[0]][index]
+                    temp.append(f'{a[0]}')
+                    empty = False
+            output.append(temp)
+            index += 1
+            if empty:
+                break
+
+        #account for early people
+        output[0].append(f'early-({len(early)})')
+        for i in range(1, 1+len(early)):
+            output[i].append(early[i-1][0])
+
+        
+        #formatting
+        for i in range(len(output[0])):
+            output[0][i] = output[0][i].replace('-', ' ')
+
+        #update sheets where people need to be dropped off
+        clear_cells(6, 11, 'B17:G27', sheet)
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="rides!B17:G27",
+                             valueInputOption="USER_ENTERED", body={"values": output}).execute()
+        
+        return areas
     except HttpError as err:
         print(err)
 
@@ -72,25 +181,21 @@ def assign_rides_going():
                 people.append(row[0])
 
         #clear cells in previous ride assignement
-        clear_cells(11, 8, "A1:K8", sheet)
-        
+        clear_cells(10, 5, "B2:K6", sheet)
+
+        #make the list of lists for the rides sheet (all random)
+        drivers = ['heidi', 'jessica', 'elliot', 'joel', 'erik', 'camryn', 'alex park']
+
         #account for too many sign ups for # of drivers
         if 4*len(drivers) < len(people):
             return 'not enough cars to take everyone'
 
-        #make the list of lists for the rides sheet (all random)
-        drivers = ['heidi', 'jessica', 'elliot', 'joel', 'erik', 'camryn', 'alex park']
-        output = []
-        header = ['GOING']
-        header.extend(['']* (len(drivers)-1) )
-        output.append(header)
-        output.append([''])
-
+        output = [[]]
         for d in drivers:
-            output[1].append(d)
+            output[0].append(d)
         
         while len(people) > 0:
-            temp = ['']
+            temp = []
             for i in range(0, len(drivers)):
                 if len(people)==0:
                     break
@@ -104,7 +209,7 @@ def assign_rides_going():
         # for o in output:
         #     print(o)
 
-        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="rides!A1:K100",
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="rides!B2:K6",
                              valueInputOption="USER_ENTERED", body={"values": output}).execute()
 
 
@@ -112,6 +217,10 @@ def assign_rides_going():
 
     except HttpError as err:
         print(err)
+
+
+def announce_rides():
+    pass
 
 
 def get_sheet():
@@ -154,5 +263,6 @@ def clear_cells(width, height, custom_range, sheet):
         print(err)
 
 
+#print(get_areas())
 assign_rides_back()
-assign_rides_going()
+#assign_rides_going()
