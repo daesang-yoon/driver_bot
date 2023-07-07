@@ -244,9 +244,17 @@ def assign_rides_going():
 
 
 def announce_rides_going():
+    return announce_rides_helper("GOING to", "B2:K6")
+
+
+def announce_rides_back():
+    return announce_rides_helper("RETURNING from", "B11:K15")
+
+
+def announce_rides_helper(header, custom_range):
     try:
         sheet = get_sheet()
-        result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="rides!B2:K6").execute()
+        result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range=f"rides!{custom_range}").execute()
         values = result.get('values', [])
 
         #change from row to cols
@@ -264,7 +272,7 @@ def announce_rides_going():
 
         # print(cars)
 
-        output = '> # __**Rides for GOING to Gethsemane !**__\n'
+        output = f'> # __**Rides for {header} Gethsemane !**__\n'
         for c in cars:
             temp = ''
             for i in range(len(c)):
@@ -279,10 +287,6 @@ def announce_rides_going():
 
     except HttpError as err:
         print(err)
-
-
-def announce_rides_back():
-    return '**Heidi**\t-\tRyan, Danny, Michelle, Ellie'
 
 
 def get_sheet():
