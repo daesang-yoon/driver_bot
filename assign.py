@@ -67,6 +67,29 @@ def assign_rides_back():
         for d in drivers:
             output[0].append(d)
 
+        while True:
+            something = False
+            temp = []
+
+            for d in output[0]:
+                if len(cars[d]) > 0:
+                    temp.append(cars[d][0])
+                    cars[d].pop(0)
+                    something = True
+                else:
+                    temp.append('')
+
+            output.append(temp)
+
+            if not something:
+                break
+
+        # print(output)
+
+        clear_cells(10, 6, "B11:K16", sheet)
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="rides!B11:K16",
+                             valueInputOption="USER_ENTERED", body={"values": output}).execute()
+
         return 'updated spreadsheet on the rides tab for RETURNING rides'
     
     except HttpError as err:
@@ -158,6 +181,7 @@ def get_areas():
                              valueInputOption="USER_ENTERED", body={"values": output}).execute()
         
         return areas
+    
     except HttpError as err:
         print(err)
 
@@ -219,8 +243,46 @@ def assign_rides_going():
         print(err)
 
 
-def announce_rides():
-    pass
+def announce_rides_going():
+    try:
+        sheet = get_sheet()
+        result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="rides!B2:K6").execute()
+        values = result.get('values', [])
+
+        #change from row to cols
+        cars = []
+        first = True
+
+        for row in values:
+            if first:
+                first = False
+                for d in row:
+                    cars.append([d])
+            else:
+                for i in range(len(row)):
+                    cars[i].append(row[i])
+
+        # print(cars)
+
+        output = '> # __**Rides for GOING to Gethsemane !**__\n'
+        for c in cars:
+            temp = ''
+            for i in range(len(c)):
+                if i==0:
+                    temp += f'**{c[i]}**  -  '
+                else:
+                    temp += f'{c[i]},  '
+            temp = temp[:-3]
+            output += f'> {temp}\n'
+
+        return output
+
+    except HttpError as err:
+        print(err)
+
+
+def announce_rides_back():
+    return '**Heidi**\t-\tRyan, Danny, Michelle, Ellie'
 
 
 def get_sheet():
@@ -264,5 +326,6 @@ def clear_cells(width, height, custom_range, sheet):
 
 
 #print(get_areas())
-assign_rides_back()
+#assign_rides_back()
 #assign_rides_going()
+#announce_rides_going()

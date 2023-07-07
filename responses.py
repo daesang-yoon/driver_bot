@@ -1,6 +1,7 @@
 from assign import assign_rides_back
 from assign import assign_rides_going
-from assign import announce_rides
+from assign import announce_rides_going
+from assign import announce_rides_back
 from assign import get_areas
 
 def get_response(message: str) -> str:
@@ -19,8 +20,11 @@ def get_response(message: str) -> str:
     elif p_message == "!assign_rides_going":
         return str(assign_rides_going())
 
-    elif p_message == "!announce_rides":
-        return str(announce_rides())
+    elif p_message == "!announce_rides_going":
+        return str(announce_rides_going())
+    
+    elif p_message == "!announce_rides_back":
+        return str(announce_rides_back())
 
     else:
         return "default message"
