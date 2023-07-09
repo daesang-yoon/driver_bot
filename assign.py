@@ -86,7 +86,7 @@ def assign_rides_back():
 
         # print(output)
 
-        clear_cells(10, 6, "B11:K16", sheet)
+        clear_cells(10, 6, "rides!B11:K16", sheet)
         sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="rides!B11:K16",
                              valueInputOption="USER_ENTERED", body={"values": output}).execute()
 
@@ -106,6 +106,10 @@ def get_areas():
         early = []  #all areas just grouped in here
         areas = defaultdict(list)  #mesa, middle, plaza, vdc/vdcn, puerta, off campus
         for row in values:
+            #account for deletion of duplicates
+            if len(row)==0:
+                print('did it')
+                continue
             person = None
             if len(row[0])>5:
                 index = row[0].rfind(' ')
@@ -176,7 +180,7 @@ def get_areas():
             output[0][i] = output[0][i].replace('-', ' ')
 
         #update sheets where people need to be dropped off
-        clear_cells(6, 11, 'B17:G27', sheet)
+        clear_cells(6, 11, 'rides!B17:G27', sheet)
         sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="rides!B17:G27",
                              valueInputOption="USER_ENTERED", body={"values": output}).execute()
         
@@ -195,6 +199,10 @@ def assign_rides_going():
         #get values in the sheet
         people = []
         for row in values:
+            #account for deletion of duplicates
+            if len(row)==0:
+                print('did it')
+                continue
             if len(row[0])>5:
                 index = row[0].rfind(' ')
                 if index==-1:
@@ -205,7 +213,7 @@ def assign_rides_going():
                 people.append(row[0])
 
         #clear cells in previous ride assignement
-        clear_cells(10, 5, "B2:K6", sheet)
+        clear_cells(10, 5, "rides!B2:K6", sheet)
 
         #make the list of lists for the rides sheet (all random)
         drivers = ['heidi', 'jessica', 'elliot', 'joel', 'erik', 'camryn', 'alex park']
@@ -289,6 +297,31 @@ def announce_rides_helper(header, custom_range):
         print(err)
 
 
+def update_signups():
+    try:
+        sheet = get_sheet()
+        result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="Current!A2:J100").execute()
+        values = result.get('values', [])
+
+        unique = dict()
+        for row in values:
+            if len(row) < 2:
+                continue
+            unique[row[1].lower()] = row
+        
+        clear_cells(10, 99, "Current!A2:J100", sheet)
+
+        output = sorted([v for k, v in unique.items()], key=lambda x:x[0])
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range=f"Current!A2:J100",
+                             valueInputOption="USER_ENTERED", body={"values": output}).execute()
+
+
+    except HttpError as err:
+        print(err)
+
+    return 'Updated signups list to remove duplicates/blank lines !'
+
+
 def get_sheet():
     
     creds = None
@@ -322,14 +355,15 @@ def clear_cells(width, height, custom_range, sheet):
             for i in range(width):
                 e.append('')
 
-        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range=f"rides!{custom_range}",
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range=f"{custom_range}",
                              valueInputOption="USER_ENTERED", body={"values": empty}).execute()
        
     except HttpError as err:
         print(err)
 
 
-#print(get_areas())
-#assign_rides_back()
-#assign_rides_going()
-#announce_rides_going()
+# print(get_areas())
+# assign_rides_back()
+# assign_rides_going()
+# announce_rides_going()
+update_signups()
