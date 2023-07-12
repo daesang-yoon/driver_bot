@@ -20,7 +20,8 @@ def assign_rides_back():
         areas = get_areas()
 
         #assign people to cars
-        drivers = ['heidi', 'jessica', 'elliot', 'alex park', 'joel', 'erik', 'camryn']
+        #drivers = ['heidi', 'jessica', 'elliot', 'alex park', 'joel', 'erik', 'camryn']
+        drivers = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="drivers!B1:K1").execute().get('values', [])[0]
 
         #account for too many sign ups for # of drivers
         if 4*len(drivers) < sum([len(v) for _, v in areas.items()]):
@@ -216,7 +217,8 @@ def assign_rides_going():
         clear_cells(10, 5, "rides!B2:K6", sheet)
 
         #make the list of lists for the rides sheet (all random)
-        drivers = ['heidi', 'jessica', 'elliot', 'joel', 'erik', 'camryn', 'alex park']
+        # drivers = ['heidi', 'jessica', 'elliot', 'joel', 'erik', 'camryn', 'alex park']
+        drivers = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="drivers!B3:K3").execute().get('values', [])[0]
 
         #account for too many sign ups for # of drivers
         if 4*len(drivers) < len(people):
@@ -366,4 +368,4 @@ def clear_cells(width, height, custom_range, sheet):
 # assign_rides_back()
 # assign_rides_going()
 # announce_rides_going()
-update_signups()
+# update_signups()
