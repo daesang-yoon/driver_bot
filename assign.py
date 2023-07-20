@@ -13,6 +13,29 @@ import random
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SPREADSHEET_ID = "18MYt45bq_UjoAKP-cQjg5nVeyAXaC7lpC_CsUIKXJns"
 
+drivers_going = []
+drivers_returning = []
+early_drivers = []
+
+#helper functions for list of drivers
+def add_driver_going(driver):
+    drivers_going.append(driver)
+
+def add_driver_returning(driver):
+    drivers_returning.append(driver)
+
+def add_early_driver(driver):
+    early_drivers.append(driver)
+
+def remove_driver_going(driver):
+    drivers_going.remove(driver)
+
+def remove_driver_returning(driver):
+    drivers_returning.remove(driver)
+
+def remove_early_driver(driver):
+    early_drivers.remove(driver)
+
 
 def assign_rides_back():
     try:
