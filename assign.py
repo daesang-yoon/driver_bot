@@ -20,22 +20,42 @@ early_drivers = []
 #helper functions for list of drivers
 def add_driver_going(driver):
     drivers_going.append(driver)
-
 def add_driver_returning(driver):
     drivers_returning.append(driver)
-
 def add_early_driver(driver):
     early_drivers.append(driver)
-
 def remove_driver_going(driver):
     drivers_going.remove(driver)
-
 def remove_driver_returning(driver):
     drivers_returning.remove(driver)
-
 def remove_early_driver(driver):
     early_drivers.remove(driver)
-
+def reset_drivers():
+    drivers_going = []
+    drivers_returning = []
+    early_drivers = []
+def update_drivers():
+    try:
+        sheet = get_sheet()
+        #going
+        clear_cells(12, 1, 'drivers!B1:M1', sheet)
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="drivers!B1:M1",
+                             valueInputOption="USER_ENTERED", body={"values": [drivers_going]}).execute()
+        #coming
+        clear_cells(12, 1, 'drivers!B3:M3', sheet)
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="drivers!B3:M3",
+                             valueInputOption="USER_ENTERED", body={"values": [drivers_returning]}).execute()
+        #early
+        clear_cells(12, 1, 'drivers!B5:M5', sheet)
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="drivers!B5:M5",
+                             valueInputOption="USER_ENTERED", body={"values": [early_drivers]}).execute()
+    except HttpError as err:
+        print(err)
+def print_driverS():
+    output = 'GOING: ' + str(drivers_going) + '\n'
+    output += 'RETURNING: ' + str(drivers_returning) + '\n'
+    output += 'EARLY: ' + str(early_drivers) + '\n'
+    return output
 
 def assign_rides_back():
     try:

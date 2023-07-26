@@ -4,6 +4,8 @@ from assign import announce_rides_going
 from assign import announce_rides_back
 from assign import get_areas
 from assign import update_signups
+from assign import update_drivers
+from assign import print_drivers
 
 def get_response(message: str) -> str:
     p_message = message.lower()
@@ -17,6 +19,13 @@ def get_response(message: str) -> str:
     elif p_message == "!update_areas":
         get_areas()
         return str('updated spreadsheet for DROPPING OFF people')
+    
+    elif p_message == "!update_drivers":
+        update_drivers()
+        return str('updated spreadsheet with drivers')
+    
+    elif p_message == "!print_drivers":
+        return str(print_drivers())
 
     elif p_message == "!assign_rides_going":
         return str(assign_rides_going())
