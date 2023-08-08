@@ -16,16 +16,17 @@ DRIVER_CHANNEL_ID = 1131665880032493608
 driver_message_id = None
 
 async def geth_signup_reminder(channel):
+    wait_time = None
     #thursday but after the reminder time
     now = datetime.datetime.now()
-    if now.date.weekday()==3 and now.hour > 11:
+    if now.date().weekday()==3 and now.hour > 11:
         wait_time = datetime.timedelta(hours=24).total_seconds()
         await asyncio.sleep(wait_time)
 
     #wait in 8 hour intervals until it's thursday
     now = datetime.datetime.now()
-    if now.date.weekday()!=3:
-        while now.date.weekday()!=3:
+    if now.date().weekday()!=3:
+        while now.date().weekday()!=3:
             wait_time = datetime.timedelta(hours=8).total_seconds()
             await asyncio.sleep(wait_time)
             now = datetime.datetime.now()
@@ -33,7 +34,7 @@ async def geth_signup_reminder(channel):
     #wait until thursday 11am
     now = datetime.datetime.now()
     reminder_time = now.replace(hour=11, minute=0, second=0, microsecond=0)
-    wait_time - (reminder_time-now).total_seconds()
+    wait_time = (reminder_time-now).total_seconds()
     await asyncio.sleep(wait_time)
 
     #send reminder then wait a week
@@ -46,16 +47,17 @@ async def geth_signup_reminder(channel):
         
 
 async def driver_geth_reminder(channel):
+    wait_time = None
     #wednesday but after the reminder time
     now = datetime.datetime.now()
-    if now.date.weekday()==2 and now.hour > 17:
+    if now.date().weekday()==2 and now.hour > 17:
         wait_time = datetime.timedelta(hours=24).total_seconds()
         await asyncio.sleep(wait_time)
 
     #wait in 8 hour intervals until it's wednesday
     now = datetime.datetime.now()
-    if now.date.weekday()!=2:
-        while now.date.weekday()!=2:
+    if now.date().weekday()!=2:
+        while now.date().weekday()!=2:
             wait_time = datetime.timedelta(hours=8).total_seconds()
             await asyncio.sleep(wait_time)
             now = datetime.datetime.now()
@@ -63,7 +65,7 @@ async def driver_geth_reminder(channel):
     #wait until wednesday 5:00 pm
     now = datetime.datetime.now()
     reminder_time = now.replace(hour=17, minute=0, second=0, microsecond=0)
-    wait_time - (reminder_time-now).total_seconds()
+    wait_time = (reminder_time-now).total_seconds()
     await asyncio.sleep(wait_time)
 
     #send reminder then wait a week
@@ -96,7 +98,7 @@ async def send_message(message, user_message):
 
 
 def run_discord_bot():
-    TOKEN = 'MTEyMTIwNTk4NjA5MTM0MzkwNQ.GY-Jt-.fpmJYbPIj3Rk82lW96cVKp0Ig-AgfVvKg0nCHY'
+    TOKEN = ''
     intents = discord.Intents.default()
     intents.message_content = True
     intents.members = True
@@ -105,9 +107,9 @@ def run_discord_bot():
     @client.event
     async def on_ready():
         print(f'{client.user} is now running!')
-        # await geth_signup_reminder(client.get_channel(ANNOUCEMENT_CHANNEL_ID))
-        # await driver_geth_reminder(client.get_channel(DRIVER_CHANNEL_ID))
-        await reminder_test(client.get_channel(DRIVER_CHANNEL_ID))
+        await geth_signup_reminder(client.get_channel(ANNOUCEMENT_CHANNEL_ID))
+        await driver_geth_reminder(client.get_channel(DRIVER_CHANNEL_ID))
+        # await reminder_test(client.get_channel(DRIVER_CHANNEL_ID))
 
     @client.event
     async def on_raw_reaction_add(payload):

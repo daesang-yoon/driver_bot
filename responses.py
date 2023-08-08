@@ -4,14 +4,19 @@ from assign import announce_rides_going
 from assign import announce_rides_back
 from assign import get_areas
 from assign import update_signups
-from assign import update_drivers
-from assign import print_drivers
+
 
 def get_response(message: str) -> str:
     p_message = message.lower()
 
     if p_message == '!help':
-        return "`I\'m a bot that helps out with soon rides!`"
+        return "List of commands: \n\n \
+                    !update_signups \
+                    !update_areas \
+                    !assign_rides_going \
+                    !assign_rides_back \
+                    !announce_rides_going \
+                    !announce_rides_back"
     
     elif p_message == "!assign_rides_back":
         return str(assign_rides_back())
@@ -20,13 +25,6 @@ def get_response(message: str) -> str:
         get_areas()
         return str('updated spreadsheet for DROPPING OFF people')
     
-    elif p_message == "!update_drivers":
-        update_drivers()
-        return str('updated spreadsheet with drivers')
-    
-    elif p_message == "!print_drivers":
-        return str(print_drivers())
-
     elif p_message == "!assign_rides_going":
         return str(assign_rides_going())
 
@@ -40,8 +38,8 @@ def get_response(message: str) -> str:
         return str(update_signups())
 
     else:
-        return "default message"
-        # return ''
+        # return "default message"
+        return ''
 
 
 

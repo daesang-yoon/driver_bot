@@ -13,58 +13,93 @@ import random
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SPREADSHEET_ID = "18MYt45bq_UjoAKP-cQjg5nVeyAXaC7lpC_CsUIKXJns"
 
-drivers_going = []
-drivers_returning = []
-early_drivers = []
-
 #helper functions for list of drivers
 def add_driver_going(driver):
-    drivers_going.append(driver)
-def add_driver_returning(driver):
-    drivers_returning.append(driver)
-def add_early_driver(driver):
-    early_drivers.append(driver)
-def remove_driver_going(driver):
-    drivers_going.remove(driver)
-def remove_driver_returning(driver):
-    drivers_returning.remove(driver)
-def remove_early_driver(driver):
-    early_drivers.remove(driver)
-def reset_drivers():
-    drivers_going = []
-    drivers_returning = []
-    early_drivers = []
-def update_drivers():
     try:
         sheet = get_sheet()
-        #going
+        drivers = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="drivers!B1:M1").execute().get('values', [])[0]
+        drivers = set(drivers)
+        drivers.add(driver)
+        drivers = list(drivers)
         clear_cells(12, 1, 'drivers!B1:M1', sheet)
         sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="drivers!B1:M1",
-                             valueInputOption="USER_ENTERED", body={"values": [drivers_going]}).execute()
-        #coming
-        clear_cells(12, 1, 'drivers!B3:M3', sheet)
-        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="drivers!B3:M3",
-                             valueInputOption="USER_ENTERED", body={"values": [drivers_returning]}).execute()
-        #early
-        clear_cells(12, 1, 'drivers!B5:M5', sheet)
-        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="drivers!B5:M5",
-                             valueInputOption="USER_ENTERED", body={"values": [early_drivers]}).execute()
+                             valueInputOption="USER_ENTERED", body={"values": [drivers]}).execute()
     except HttpError as err:
         print(err)
-def print_driverS():
-    output = 'GOING: ' + str(drivers_going) + '\n'
-    output += 'RETURNING: ' + str(drivers_returning) + '\n'
-    output += 'EARLY: ' + str(early_drivers) + '\n'
-    return output
+def add_driver_returning(driver):
+    try:
+        sheet = get_sheet()
+        drivers = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="drivers!B3:M3").execute().get('values', [])[0]
+        drivers = set(drivers)
+        drivers.add(driver)
+        drivers = list(drivers)
+        clear_cells(12, 1, 'drivers!B3:M3', sheet)
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="drivers!B3:M3",
+                             valueInputOption="USER_ENTERED", body={"values": [drivers]}).execute()
+    except HttpError as err:
+        print(err)
+def add_early_driver(driver):
+    try:
+        sheet = get_sheet()
+        drivers = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="drivers!B5:M5").execute().get('values', [])[0]
+        drivers = set(drivers)
+        drivers.add(driver)
+        drivers = list(drivers)
+        clear_cells(12, 1, 'drivers!B5:M5', sheet)
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="drivers!B5:M5",
+                             valueInputOption="USER_ENTERED", body={"values": [drivers]}).execute()
+    except HttpError as err:
+        print(err)
+def remove_driver_going(driver):
+    try:
+        sheet = get_sheet()
+        drivers = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="drivers!B1:M1").execute().get('values', [])[0]
+        drivers = set(drivers)
+        if driver in drivers:
+            drivers.remove(driver)
+        drivers = list(drivers)
+        clear_cells(12, 1, 'drivers!B1:M1', sheet)
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="drivers!B1:M1",
+                             valueInputOption="USER_ENTERED", body={"values": [drivers]}).execute()
+    except HttpError as err:
+        print(err)
+def remove_driver_returning(driver):
+    try:
+        sheet = get_sheet()
+        drivers = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="drivers!B3:M3").execute().get('values', [])[0]
+        drivers = set(drivers)
+        if driver in drivers:
+            drivers.remove(driver)
+        drivers = list(drivers)
+        clear_cells(12, 1, 'drivers!B3:M3', sheet)
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="drivers!B3:M3",
+                             valueInputOption="USER_ENTERED", body={"values": [drivers]}).execute()
+    except HttpError as err:
+        print(err)
+def remove_early_driver(driver):
+    try:
+        sheet = get_sheet()
+        drivers = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="drivers!B5:M5").execute().get('values', [])[0]
+        drivers = set(drivers)
+        if driver in drivers:
+            drivers.remove(driver)
+        drivers = list(drivers)
+        clear_cells(12, 1, 'drivers!B5:M5', sheet)
+        sheet.values().update(spreadsheetId=SPREADSHEET_ID, range="drivers!B5:M5",
+                             valueInputOption="USER_ENTERED", body={"values": [drivers]}).execute()
+    except HttpError as err:
+        print(err)
+
 
 def assign_rides_back():
     try:
+        update_signups()
         sheet = get_sheet()
         areas = get_areas()
 
         #assign people to cars
         #drivers = ['heidi', 'jessica', 'elliot', 'alex park', 'joel', 'erik', 'camryn']
-        drivers = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="drivers!B1:K1").execute().get('values', [])[0]
+        drivers = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="drivers!B1:M1").execute().get('values', [])[0]
 
         #account for too many sign ups for # of drivers
         if 4*len(drivers) < sum([len(v) for _, v in areas.items()]):
@@ -142,6 +177,7 @@ def assign_rides_back():
 
 def get_areas():
     try:
+        update_signups()
         sheet = get_sheet()
         result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="Current!B2:H100").execute()
         values = result.get('values', [])
@@ -167,7 +203,6 @@ def get_areas():
             if row[5]=='NO':
                 early.append((person, row[4]))
             else:
-                #mesa
                 if 'mesa' in row[4].lower():
                     areas['mesa'].append((person, row[4]))
                 elif 'brandy' in row[4].lower() or 'middle' in row[4].lower():
@@ -236,6 +271,7 @@ def get_areas():
 
 def assign_rides_going():
     try:
+        update_signups()
         sheet = get_sheet()
         result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="Current!B2:H100").execute()
         values = result.get('values', [])
@@ -261,7 +297,7 @@ def assign_rides_going():
 
         #make the list of lists for the rides sheet (all random)
         # drivers = ['heidi', 'jessica', 'elliot', 'joel', 'erik', 'camryn', 'alex park']
-        drivers = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="drivers!B3:K3").execute().get('values', [])[0]
+        drivers = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="drivers!B3:M3").execute().get('values', [])[0]
 
         #account for too many sign ups for # of drivers
         if 4*len(drivers) < len(people):
